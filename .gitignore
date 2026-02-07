@@ -10,3 +10,4 @@ wheels/
 .venv
 test/
 manage.py
+db.sqlite3
