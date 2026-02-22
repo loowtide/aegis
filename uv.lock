@@ -31,10 +31,26 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "django" },
+    { name = "django-enum" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "django", specifier = ">=6.0.1" }]
+requires-dist = [
+    { name = "django", specifier = ">=6.0.1" },
+    { name = "django-enum", specifier = ">=2.3.0" },
+]
+
+[[package]]
+name = "django-enum"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/19/c70df3e16bd8c0085c10da9343d67faca1bb3636203258b013fbdfc7555e/django_enum-2.3.0.tar.gz", hash = "sha256:10d4a503a60a3e127ecaa57607c29c4b508ae5428462e301c4b343fa4eb71d8e", size = 623525, upload-time = "2025-11-22T17:24:07.658Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/24/66e75eba51280a8ca66c7f078847c546c3647cdc28f6c53796d163a96bff/django_enum-2.3.0-py3-none-any.whl", hash = "sha256:5c9a593049ebdb245573b3a11a897d9048dc60affe20985337010f1a0e4115c5", size = 35261, upload-time = "2025-11-22T17:24:06.038Z" },
+]
 
 [[package]]
 name = "sqlparse"

@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import IntFlag
+import logging
 from django.db import models
 from django.db.models import (
     DateTimeField,
@@ -8,12 +9,13 @@ from django.db.models import (
     TextField,
     FloatField,
 )
+from django_enum import EnumField
 from django.db import transaction
 from django.utils import timezone as utils_timezone
 from .apps import AegisConfig
+logger=logging.getLogger(__name__)
 
 class HttpMethod(IntFlag):
-    NONE=0
     GET=1<<0
     HEAD=1<<1
     POST=1<<2
@@ -29,6 +31,7 @@ class BlockedIP(models.Model):
     ip = GenericIPAddressField(
         primary_key=True, db_index=True, verbose_name="IP  address"
     )
+    allowed_methods:EnumField =EnumField(HttpMethod,default=0,help_text="HTTP methods this IP can use")
     reason = TextField()
     datetime_added = DateTimeField(default=utils_timezone.now, db_index=True)
     cooldown = PositiveIntegerField(
@@ -49,6 +52,24 @@ class BlockedIP(models.Model):
     def has_expired(self):
         quiet_time = utils_timezone.now() - (self.last_seen or self.datetime_added)
         return quiet_time.total_seconds() >= self.cooldown
+
+    def allowed_methods_str(self):
+        return BlockedIP.intflags_to_names(self.allowed_methods)
+
+    @classmethod
+    def methods_to_intflags(cls,raw_methods:str)->int:
+        flag=0
+        for s in raw_methods.split(','):
+            method=getattr(HttpMethod,s.strip().upper(),None)
+            if method is None:
+                logger.error(f"Can't convert the HTTP method '{s.strip()}' ,skipping")
+            else:
+                flag|=method.value
+        return flag
+
+    @classmethod
+    def intflags_to_names(cls,flag:int):
+        return ",".join(str(method.name) for method in HttpMethod if method.value>0 and flag&method)
 
 class RateLimit(models.Model):
     ip=GenericIPAddressField(db_index=True,verbose_name="IP address")
@@ -75,7 +96,7 @@ class RateLimit(models.Model):
 
             if new_level>=1.0:
                 obj.bucket_level=new_level-1.0
-                obj.save(update_fields=['bucket_level','last_visited'])
+                obj.save(update_fields=['bucket_level','last_updated'])
                 return True
             obj.bucket_level=new_level
             obj.save(update_fields=['bucket_level','last_updated'])

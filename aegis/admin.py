@@ -1,5 +1,4 @@
 from django.contrib import admin,messages
-from django.http import HttpRequest
 from .models import BlockedIP, HttpMethod, RateLimit
 from django.utils import timezone
 from django.utils.html import format_html
@@ -12,6 +11,10 @@ class BlockedIPAdmin(admin.ModelAdmin):
     list_filter=('datetime_added','cooldown')
     search_fields=('ip','reason')
     readonly_fields=['datetime_added']
+
+    class Meta:
+        model=BlockedIP
+
 
     @admin.display(description="Active",boolean=True)
     def is_active(self,obj:BlockedIP):
@@ -35,8 +38,9 @@ class BlockedIPAdmin(admin.ModelAdmin):
 
     @admin.action(description="Reset selected IPs")
     def reset_ips(self,request,queryset):
-        tally=queryset.update(tally=0,last_seen=None)
-        self.message_user(request,f"Successfully reset stats for {tally} IPs",messages.SUCCESS)
+        count=queryset.update(tally=0,last_seen=None)
+        self.message_user(request,f"Successfully reset stats for {count} IPs",messages.SUCCESS)
+
 
 
 
