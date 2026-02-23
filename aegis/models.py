@@ -9,13 +9,14 @@ from django.db.models import (
     TextField,
     FloatField,
 )
-from django_enum import EnumField
 from django.db import transaction
 from django.utils import timezone as utils_timezone
 from .apps import AegisConfig
 logger=logging.getLogger(__name__)
+from django import forms
 
 class HttpMethod(IntFlag):
+    NONE=0
     GET=1<<0
     HEAD=1<<1
     POST=1<<2
@@ -27,11 +28,12 @@ class HttpMethod(IntFlag):
     PATCH=1<<8
 
 
+
 class BlockedIP(models.Model):
     ip = GenericIPAddressField(
         primary_key=True, db_index=True, verbose_name="IP  address"
     )
-    allowed_methods:EnumField =EnumField(HttpMethod,default=0,help_text="HTTP methods this IP can use")
+    allowed_methods=PositiveIntegerField(default=0,help_text="HTTP methods this IP can use")
     reason = TextField()
     datetime_added = DateTimeField(default=utils_timezone.now, db_index=True)
     cooldown = PositiveIntegerField(
@@ -70,6 +72,24 @@ class BlockedIP(models.Model):
     @classmethod
     def intflags_to_names(cls,flag:int):
         return ",".join(str(method.name) for method in HttpMethod if method.value>0 and flag&method)
+
+class BlockedIPAdminForm(forms.ModelForm):
+    method_selection=forms.MultipleChoiceField(choices=[(m.name,m.name) for m in HttpMethod if m.value>0],required=False,label="Allowed HTTP methods",widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model=BlockedIP
+        fields="__all__"
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        if self.instance and self.instance.allowed_methods:
+            self.initial['method_selection']=[m.name for m in HttpMethod if m.value>0 and (self.instance.allowed_methods & m.value)]
+
+    def save(self,commit=True):
+        selected_names=self.cleaned_data.get('method_selection',[])
+        methods_str=",".join(selected_names)
+        self.instance.allowed_methods=BlockedIP.methods_to_intflags(methods_str)
+        return super().save(commit=commit)
 
 class RateLimit(models.Model):
     ip=GenericIPAddressField(db_index=True,verbose_name="IP address")

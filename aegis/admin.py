@@ -1,12 +1,27 @@
+from itertools import count
+
 from django.contrib import admin,messages
-from .models import BlockedIP, HttpMethod, RateLimit
+from .models import BlockedIP, HttpMethod, RateLimit,BlockedIPAdminForm
 from django.utils import timezone
 from django.utils.html import format_html
 
+
+def allowed_method_toggle(method:HttpMethod):
+    def toggle_method(modeladmin,request,queryset):
+        for entry in queryset:
+            entry.allowed_methods^=method.value
+            entry.save()
+        messages.success(request,f"Toggled {method.name} for {queryset.count()}  enteries")
+    toggle_method.__name__=f"toggle {method.name}"
+    toggle_method.short_description=f"Toggle {method.name} Permission"
+    return toggle_method
+
 @admin.register(BlockedIP)
 class BlockedIPAdmin(admin.ModelAdmin):
+    form=BlockedIPAdminForm
+    exclude=['allowed_methods']
     list_display=(
-        'ip','is_active','time_remaining','tally','reason','last_seen'
+        'ip','is_active','time_remaining','tally','allowed_methods_str','last_seen'
     )
     list_filter=('datetime_added','cooldown')
     search_fields=('ip','reason')
@@ -34,7 +49,7 @@ class BlockedIPAdmin(admin.ModelAdmin):
     def short_reason(self,obj:BlockedIP):
         return (obj.reason[:30]+'...') if len(obj.reason)>30 else obj.reason
 
-    actions=['reset_ips']
+    actions=['reset_ips']+[allowed_method_toggle(method) for method in HttpMethod if method.value>0]
 
     @admin.action(description="Reset selected IPs")
     def reset_ips(self,request,queryset):
