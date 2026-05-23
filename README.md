@@ -1,5 +1,6 @@
+![Aegis](docs/aegis.svg)
+# Aegis
 
-# Aegis 
 Django middleware that blocks requests from IPs listed in a database-backed blocklist. Returns a styled 403 response with a `Retry-After` header and tracks every blocked attempt.
 
 ## Features
@@ -30,18 +31,20 @@ python manage.py migrate aegis
 
 ## Requirements
 
-| Component | Purpose |
-|---|---|
-| `aegis.models.BlockedIP` | Model with fields: `ip`, `expires_at`, `last_seen`, `tally` |
-| `aegis.utils.get_client_ip` | Extracts the real client IP from the request |
-| `aegis/blocked.html` | Template rendered for blocked requests; receives `retry_after_human` |
+| Component                   | Purpose                                                              |
+| --------------------------- | -------------------------------------------------------------------- |
+| `aegis.models.BlockedIP`    | Model with fields: `ip`, `expires_at`, `last_seen`, `tally`          |
+| `aegis.utils.get_client_ip` | Extracts the real client IP from the request                         |
+| `aegis/blocked.html`        | Template rendered for blocked requests; receives `retry_after_human` |
 
 A minimal template:
 
 ```html
 <!DOCTYPE html>
 <html>
-  <head><title>Blocked</title></head>
+  <head>
+    <title>Blocked</title>
+  </head>
   <body>
     <h1>You are temporarily blocked</h1>
     <p>Try again in {{ retry_after_human }}.</p>
@@ -72,12 +75,12 @@ On every request, the middleware:
 
 The `_humanize` helper converts seconds into the largest unit that fits, with correct pluralization:
 
-| Range | Output |
-|---|---|
+| Range   | Output         |
+| ------- | -------------- |
 | `< 60s` | `"42 seconds"` |
-| `< 60m` | `"7 minutes"` |
-| `< 24h` | `"3 hours"` |
-| `≥ 24h` | `"2 days"` |
+| `< 60m` | `"7 minutes"`  |
+| `< 24h` | `"3 hours"`    |
+| `≥ 24h` | `"2 days"`     |
 
 ## Adding a Block
 

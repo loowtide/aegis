@@ -1,0 +1,51 @@
+<svg width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+  <title>Aegis logo</title>
+  <desc>Hexagonal shield with circuit traces, beside the Aegis wordmark.</desc>
+
+  <g transform="translate(230, 140)">
+    <polygon points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40"
+      fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="miter"/>
+    <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30"
+      fill="none" stroke="#1a1a1a" stroke-width="1" stroke-linejoin="miter"/>
+
+    <path d="M 0 0 L 0 -45 L 18 -45" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <circle cx="18" cy="-45" r="3" fill="#1a1a1a"/>
+
+    <path d="M 0 0 L 35 -20 L 45 -20" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <circle cx="45" cy="-20" r="3" fill="#1a1a1a"/>
+
+    <path d="M 0 0 L 40 0" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <rect x="38" y="-4" width="8" height="8" fill="#1a1a1a"/>
+
+    <path d="M 0 0 L 25 25 L 25 38" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <circle cx="25" cy="38" r="3" fill="#1a1a1a"/>
+
+    <path d="M 0 0 L -30 30" fill="none" stroke="#c92a2a" stroke-width="2" stroke-linecap="square"/>
+    <line x1="-36" y1="24" x2="-24" y2="36" stroke="#c92a2a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-36" y1="36" x2="-24" y2="24" stroke="#c92a2a" stroke-width="2.5" stroke-linecap="round"/>
+
+    <path d="M 0 0 L -45 0" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <rect x="-46" y="-4" width="8" height="8" fill="#1a1a1a"/>
+
+    <path d="M 0 0 L -28 -28 L -28 -38" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="square"/>
+    <circle cx="-28" cy="-38" r="3" fill="#1a1a1a"/>
+
+    <circle cx="0" cy="0" r="9" fill="#1a1a1a"/>
+    <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+  </g>
+
+  <text x="340" y="148"
+    style="font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 56px; font-weight: 500; letter-spacing: -1px;"
+    fill="#1a1a1a">aegis</text>
+
+  <g transform="translate(340, 175)">
+    <rect x="0" y="0" width="8" height="8" fill="#2f9e44"/>
+    <text x="14" y="8"
+      style="font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.5px;"
+      fill="#666666">v1.0 · ACTIVE · 403 RETRY-AFTER</text>
+  </g>
+
+  <text x="340" y="200"
+    style="font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 11px; font-weight: 400; letter-spacing: 0.5px;"
+    fill="#999999">[middleware] django.request → blocklist.check()</text>
+</svg>
