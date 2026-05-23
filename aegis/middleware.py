@@ -1,7 +1,6 @@
-import datetime
-from datetime import timezone
-
-from django.http import HttpResponseBadRequest
+from django.db.models import F
+from django.http import HttpResponseForbidden
+from django.utils import timezone
 
 from .apps import AegisConfig
 from .models import BlockedIP
@@ -17,14 +16,20 @@ class BlockedIPMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        print(get_client_ip(request))
+        ip = get_client_ip(request)
         if should_block(request):
-            entry = BlockedIP.objects.filter(ip=get_client_ip(request)).first()
-            if entry:
-                entry.last_seen = datetime.datetime.now(timezone.utc)
-                entry.tally += 1
-                entry.save()
-                return HttpResponseBadRequest(
+            entry = BlockedIP.objects.filter(ip=ip).first()
+            if entry and not entry.has_expired():
+                BlockedIP.objects.filter(pk=entry.pk).update(
+                    last_seen=timezone.now(),
+                    tally=F("tally") + 1,
+                )
+                return HttpResponseForbidden(
                     denial_template().format(ip=entry.ip, cooldown=entry.cooldown)
                 )
         return self.get_response(request)
+
+
+class RateLimitMiddleware:
+    def __init__(self, get_response):
+        pass

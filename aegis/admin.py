@@ -1,27 +1,31 @@
+from datetime import timedelta
+
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import BlockedIP, BlockedIPAdminForm, HttpMethod, RateLimit, RateLimitRule
+from .models import (
+    BlockedIP,
+    BlockedIPAdminForm,
+    GlobalRateLimitRule,
+    HttpMethod,
+    RateLimitRule,
+)
 
 
 def allowed_method_toggle(method: HttpMethod):
     def toggle_method(modeladmin, request, queryset):
-        if hasattr(queryset.model, "allowed_methods"):
-            field_name = "allowed_methods"
-        else:
+        if not hasattr(queryset.model, "allowed_methods"):
             messages.error(request, f"model {queryset.model} does not support toggling")
             return
+        n = queryset.count()
         for entry in queryset:
-            val = getattr(entry, field_name, 0)
-            setattr(entry, field_name, val ^ method.value)
-            entry.save()
-        messages.success(
-            request, f"Toggled {method.name} for {queryset.count()}  enteries"
-        )
+            entry.allowed_methods = (entry.allowed_methods or 0) ^ method.value
+            entry.save(update_fields=["allowed_methods"])
+        messages.success(request, f"Toggled {method.name} for {n} entries")
 
-    toggle_method.__name__ = f"toggle {method.name}"
-    toggle_method.short_description = f"Toggle {method.name} Permission"
+    toggle_method.__name__ = f"toggle_{method.name}"
+    toggle_method.short_description = f"Toggle {method.name} Permission"  # type: ignore[attr-defined]
     return toggle_method
 
 
@@ -44,9 +48,6 @@ class BlockedIPAdmin(admin.ModelAdmin):
     search_fields = ("ip", "reason")
     readonly_fields = ["datetime_added"]
 
-    class Meta:
-        model = BlockedIP
-
     @admin.display(description="Active", boolean=True)
     def is_active(self, obj: BlockedIP):
         return not obj.has_expired()
@@ -54,12 +55,13 @@ class BlockedIPAdmin(admin.ModelAdmin):
     @admin.display(description="Days Remaining")
     def time_remaining(self, obj: BlockedIP):
         reference_time = obj.last_seen or obj.datetime_added
-        elapsed = timezone.now() - reference_time
-        remaining_days = obj.cooldown - elapsed.days
+        expiry = reference_time + timedelta(days=obj.cooldown)
+        remaining = expiry - timezone.now()
 
-        if remaining_days <= 0:
+        if remaining.total_seconds() <= 0:
             return format_html('<span style="color:grey;">Expired</span>')
-        return f"{remaining_days} days"
+        days = remaining.days
+        return f"{days}d {remaining.seconds // 3600}h remaining"
 
     @admin.display(description="Short Reason")
     def short_reason(self, obj: BlockedIP):
@@ -82,18 +84,29 @@ class RateLimitRuleInline(admin.TabularInline):
     readonly_fields = ("last_updated",)
 
 
-@admin.register(RateLimit)
+@admin.register(GlobalRateLimitRule)
+class GlobalRateLimitAdmin(admin.ModelAdmin):
+    list_display = ("get_method_name", "max_capacity", "bucket_level", "refill_rate")
+    list_editable = ("max_capacity", "bucket_level", "refill_rate")
+
+    @admin.display(description="Method", ordering="method")
+    def get_method_name(self, obj):
+        return HttpMethod(obj.method).name
+
+
+@admin.register(RateLimitRule)
 class RateLimitAdmin(admin.ModelAdmin):
-    inlines = [RateLimitRuleInline]
     list_display = (
         "ip",
-        "get_methods",
+        "get_method_display",
+        "max_capacity",
+        "bucket_level",
+        "refill_rate",
+        "last_updated",
     )
-    list_filter = ("rules__method", "rules__last_updated")
+    list_filter = ("method", "last_updated")
     search_fields = ("ip",)
-
-    class Meta:
-        model = RateLimit
+    readonly_fields = ["last_updated"]
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("rules")
