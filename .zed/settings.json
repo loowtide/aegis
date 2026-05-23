@@ -1,0 +1,10 @@
+{
+  "terminal": {
+    "shell": {
+      "program": "sh"
+    }
+  },
+  "indent_guides": {
+    "background_coloring": "indent_aware"
+  }
+}
