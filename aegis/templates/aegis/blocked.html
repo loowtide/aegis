@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Just a moment</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                background: #fafaf9;
+                color: #1c1917;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 1.5rem;
+                line-height: 1.6;
+            }
+            main {
+                max-width: 420px;
+                text-align: center;
+            }
+            h1 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin: 0 0 1rem;
+            }
+            p {
+                color: #57534e;
+                margin: 0.5rem 0;
+            }
+            .retry {
+                margin-top: 1.5rem;
+                color: #78716c;
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Just a moment</h1>
+            <p>
+                We've paused requests from your connection for a little while.
+            </p>
+            {% if retry_after_human %}
+            <p class="retry">You can try again in {{ retry_after_human }}.</p>
+            {% endif %}
+        </main>
+    </body>
+</html>
