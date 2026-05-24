@@ -1,3 +1,12 @@
+import logging
+
+from django.utils import timezone
+
+from aegis.models import BlockedIP
+
+logger = logging.getLogger(__name__)
+
+
 TRUSTED_PROXY_NETWORKS = set()
 TRUSTED_PROXY_NETWORKS = {"127.0.0.1"}
 
@@ -14,3 +23,8 @@ def get_client_ip(request):
         if ip and ip not in TRUSTED_PROXY_NETWORKS:
             return ip
     return remote_addr
+
+
+def should_block(ip, now=None):
+    now = now or timezone.now()
+    return BlockedIP.objects.filter(ip=ip, expires_at__gt=now).first()
