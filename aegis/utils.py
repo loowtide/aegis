@@ -7,7 +7,6 @@ from aegis.models import BlockedIP
 logger = logging.getLogger(__name__)
 
 
-TRUSTED_PROXY_NETWORKS = set()
 TRUSTED_PROXY_NETWORKS = {"127.0.0.1"}
 
 
