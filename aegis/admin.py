@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from django.contrib import admin
+from django.db.models.query import QuerySet
+from django.http import HttpRequest
 from django.utils import timezone
 
 from aegis.models import BlockedIP
@@ -8,14 +12,18 @@ class ActiveStatusFilter(admin.SimpleListFilter):
     title = "status"
     parameter_name = "status"
 
-    def lookups(self, request, model_admin):
+    def lookups(
+        self, request: HttpRequest, model_admin: admin.ModelAdmin[BlockedIP]
+    ) -> list[tuple[str, str]]:
         return [
             ("active", "Active"),
             ("expired", "Expired"),
             ("permanent", "Permanent"),
         ]
 
-    def queryset(self, request, queryset):
+    def queryset(
+        self, request: HttpRequest, queryset: QuerySet[BlockedIP]
+    ) -> QuerySet[BlockedIP]:
         now = timezone.now()
         if self.value() == "active":
             return queryset.filter(expires_at__gt=now)
@@ -27,7 +35,7 @@ class ActiveStatusFilter(admin.SimpleListFilter):
 
 
 @admin.register(BlockedIP)
-class BlockedIPAdmin(admin.ModelAdmin):
+class BlockedIPAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     list_display = ["ip", "reason", "blocked_at", "expires_at", "last_seen"]
     search_fields = [
         "ip",

@@ -4,27 +4,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='BlockedIP',
+            name="BlockedIP",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ip', models.GenericIPAddressField(db_index=True, unique=True, verbose_name='IP address')),
-                ('reason', models.TextField()),
-                ('blocked_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField(blank=True, db_index=True, null=True)),
-                ('tally', models.PositiveIntegerField(default=0)),
-                ('last_seen', models.DateTimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "ip",
+                    models.GenericIPAddressField(
+                        db_index=True, unique=True, verbose_name="IP address"
+                    ),
+                ),
+                ("reason", models.TextField()),
+                ("blocked_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "expires_at",
+                    models.DateTimeField(blank=True, db_index=True, null=True),
+                ),
+                ("tally", models.PositiveIntegerField(default=0)),
+                ("last_seen", models.DateTimeField(blank=True, null=True)),
             ],
             options={
-                'verbose_name': 'Blocked IP',
-                'ordering': ['-blocked_at'],
+                "verbose_name": "Blocked IP",
+                "ordering": ["-blocked_at"],
             },
         ),
     ]

@@ -3,9 +3,7 @@ from django.utils import timezone
 
 
 class BlockedIP(models.Model):
-    ip = models.GenericIPAddressField(
-        unique=True, db_index=True, verbose_name="IP address"
-    )
+    ip = models.GenericIPAddressField(unique=True, verbose_name="IP address")
     reason = models.TextField()
     blocked_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
@@ -16,7 +14,7 @@ class BlockedIP(models.Model):
         verbose_name = "Blocked IP"
         ordering = ["-blocked_at"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.ip}"
 
     @property

@@ -7,7 +7,7 @@ SECRET_KEY = "django-insecure-*g3r@y-+c2knk157m8)e4*c*2#ngsy9mkxc*$$^qs1$6nup$y+
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 INSTALLED_APPS = [
@@ -23,6 +23,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "aegis.middleware.BlockedIPMiddleware",
+    "aegis.middleware.RateLimitMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -51,9 +52,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -62,8 +60,11 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -81,9 +82,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
@@ -93,7 +91,15 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = "static/"
+
+"""
+Rate Limit Settings
+"""
+AEGIS_RATE_LIMIT_ENABLED = True
+AEGIS_RATE_LIMIT_REQUESTS = 2
+AEGIS_RATE_LIMIT_WINDOW = 60
+AEGIS_RATE_LIMIT_AUTO_BLOCK = True
+AEGIS_RATE_LIMIT_AUTO_BLOCK_THRESHOLD = 5
+AEGIS_RATE_LIMIT_BLOCK_DURATION = 3600
+AEGIS_RATE_LIMIT_SKIP_PATHS = ["/admin/", "/static/"]
