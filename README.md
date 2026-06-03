@@ -5,7 +5,7 @@ Django middleware that blocks requests from IPs listed in a database-backed bloc
 
 ## Features
 
-- **IP Blocking** — database-backed blocklist with per-entry expiry
+- **IP Blocking** — database-backed blocklist with per-entry expiry (or permanent when `expires_at=None`)
 - **Rate Limiting** — cache-backed sliding-window rate limiter
 - **Auto-Blocking** — rate limit offenders can be automatically added to the blocklist
 - Atomic tally and `last_seen` tracking on each hit
@@ -61,13 +61,13 @@ On every request, each middleware runs in order:
 ### BlockedIPMiddleware
 
 1. Resolves the client IP via `get_client_ip(request)`.
-2. Looks up an active `BlockedIP` record (`expires_at > now`).
+2. Looks up an active `BlockedIP` record (`expires_at > now` or `expires_at IS NULL` for permanent blocks).
 3. If none exists, the request proceeds normally.
 4. If one exists:
    - Atomically increments `tally` and updates `last_seen` using `F()`.
-   - Computes seconds remaining until `expires_at`.
-   - Renders `aegis/403.html` with a humanized duration.
-   - Returns `403 Forbidden` with a `Retry-After` header.
+   - Computes seconds remaining until `expires_at` (or `None` for permanent blocks).
+   - Renders `aegis/403.html` with a humanized duration (or `"the foreseeable future"` for permanent blocks).
+   - Returns `403 Forbidden` with a `Retry-After` header (omitted for permanent blocks).
 
 ### RateLimitMiddleware
 
@@ -78,14 +78,14 @@ On every request, each middleware runs in order:
    - Increments a violation counter.
    - Optionally auto-blocks the IP via `BlockedIP` if violations reach `AEGIS_RATE_LIMIT_AUTO_BLOCK_THRESHOLD`.
    - Returns `429 Too Many Requests` with a `Retry-After` header.
-5. If within limits, resets violation count on clean windows and allows the request.
+5. If within limits, allows the request (at most one violation counted per time window).
 
 ## Response Format
 
 ### 403 Forbidden
 
 - **Status:** `403 Forbidden`
-- **Header:** `Retry-After: <seconds>` — minimum `1`
+- **Header:** `Retry-After: <seconds>` — minimum `1` (omitted for permanent blocks)
 - **Body:** Rendered HTML from `aegis/403.html`
 
 ### 429 Too Many Requests
@@ -136,6 +136,12 @@ BlockedIP.objects.create(
 )
 ```
 
+For a permanent block, omit `expires_at` (set it to `None`):
+
+```python
+BlockedIP.objects.create(ip="203.0.113.45", reason="permanent ban")
+```
+
 The block takes effect on the offender's next request — no restart or cache invalidation needed.
 
 ## Running Tests
@@ -151,4 +157,4 @@ Tests are in `aegis/tests/` and cover:
 | `test_models.py`        | `BlockedIP.is_active` for permanent, future, expired |
 | `test_utils.py`         | `get_client_ip` with direct and proxied requests     |
 | `test_middleware.py`    | 403 responses, pass-through, tally tracking          |
-| `test_rate_limit.py`    | Rate limit counting, window slots, violations,  429 responses, auto-block, skip paths |
+| `test_rate_limit.py`    | Rate limit counting, window slots, violations (one per window), 429 responses, auto-block, skip paths, permanent blocks |

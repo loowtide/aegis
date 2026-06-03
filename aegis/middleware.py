@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from django.conf import settings
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -11,7 +11,7 @@ from aegis.rate_limit import (
     auto_block,
     increment_violations,
     is_rate_limited,
-    reset_if_clean_window,
+    #    reset_if_clean_window,
 )
 from aegis.utils import get_client_ip
 
@@ -38,20 +38,29 @@ class BlockedIPMiddleware:
         if not ip:
             return self.get_response(request)
         now = timezone.now()
-        entry = BlockedIP.objects.filter(ip=ip, expires_at__gt=now).first()
+        entry = BlockedIP.objects.filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=now), ip=ip
+        ).first()
         if entry:
             BlockedIP.objects.filter(pk=entry.pk).update(
                 last_seen=now, tally=F("tally") + 1
             )
-            assert entry.expires_at is not None
-            retry_after = max(1, int((entry.expires_at - now).total_seconds()))
+            if entry.expires_at is None:
+                retry_after = None
+            else:
+                retry_after = max(1, int((entry.expires_at - now).total_seconds()))
             html = render_to_string(
                 "aegis/403.html",
-                {"retry_after_human": _humanize(retry_after)},
+                {
+                    "retry_after_human": _humanize(retry_after)
+                    if retry_after
+                    else "the foreseeable future"
+                },
                 request=request,
             )
             response = HttpResponse(html, status=403)
-            response["Retry-After"] = str(retry_after)
+            if retry_after is not None:
+                response["Retry-After"] = str(retry_after)
             return response
         return self.get_response(request)
 
@@ -85,7 +94,7 @@ class RateLimitMiddleware:
             response = HttpResponse(html, status=429)
             response["Retry-After"] = str(retry_after)
             return response
-        reset_if_clean_window(ip, window, threshold)
+        # reset_if_clean_window(ip, window, threshold)
         return self.get_response(request)
 
     def _should_rate_limit(self, request: HttpRequest) -> bool:

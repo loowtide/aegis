@@ -30,7 +30,11 @@ def is_rate_limited(
     key = _rate_limit_key(ip, window)
     if cache.add(key, 1, timeout=window * 2):
         return False, 1
-    count = cache.incr(key)
+    try:
+        count = cache.incr(key)
+    except ValueError:
+        cache.add(key, 1, timeout=window * 2)
+        count = 1
     return count > max_requests, count
 
 
@@ -41,15 +45,23 @@ def get_violations(ip: str) -> int:
 def increment_violations(ip: str, window: int, threshold: int) -> int:
     key = _violation_key(ip)
     timeout = window * threshold * 2
+    slot = _window_slot(window)
+    if cache.get(_last_violation_window_key(ip)) == slot:
+        return get_violations(ip)
     if cache.add(key, 1, timeout=timeout):
         v = 1
     else:
-        v = cache.incr(key)
-    slot = _window_slot(window)
+        try:
+            v = cache.incr(key)
+        except ValueError:
+            cache.add(key, 1, timeout=timeout)
+            v = 1
+    cache.touch(key, timeout)
     cache.set(_last_violation_window_key(ip), slot, timeout=timeout)
     return v
 
 
+"""
 def reset_if_clean_window(ip: str, window: int, threshold: int) -> int:
     key = _violation_key(ip)
     last_slot = cache.get(_last_violation_window_key(ip))
@@ -61,6 +73,7 @@ def reset_if_clean_window(ip: str, window: int, threshold: int) -> int:
         cache.set(key, 0, timeout=timeout)
         return 0
     return cache.get(key) or 0
+"""
 
 
 def auto_block(ip: str, duration: int) -> BlockedIP:

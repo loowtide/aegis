@@ -27,7 +27,7 @@ class ActiveStatusFilter(admin.SimpleListFilter):
         now = timezone.now()
         if self.value() == "active":
             return queryset.filter(expires_at__gt=now)
-        if self.value() == "blocked":
+        if self.value() == "expired":
             return queryset.filter(expires_at__lte=now)
         if self.value() == "permanent":
             return queryset.filter(expires_at__isnull=True)

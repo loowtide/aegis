@@ -4,6 +4,7 @@ from typing import Any
 
 from django.http import HttpRequest
 from django.utils import timezone
+from django.db.models import Q
 
 from aegis.models import BlockedIP
 
@@ -29,4 +30,6 @@ def get_client_ip(request: HttpRequest) -> Any:
 
 def should_block(ip: str, now: datetime | None = None) -> BlockedIP | None:
     now = now or timezone.now()
-    return BlockedIP.objects.filter(ip=ip, expires_at__gt=now).first()
+    return BlockedIP.objects.filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gt=now), ip=ip
+    ).first()

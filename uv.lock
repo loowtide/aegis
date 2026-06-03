@@ -86,10 +86,12 @@ dependencies = [
     { name = "django" },
     { name = "django-stubs" },
     { name = "pytest-django" },
+    { name = "python-dotenv" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "django-stubs", extra = ["compatible-mypy"] },
     { name = "mypy" },
 ]
 
@@ -98,14 +100,18 @@ requires-dist = [
     { name = "django", specifier = ">=6.0.5" },
     { name = "django-stubs", specifier = ">=6.0.4" },
     { name = "pytest-django", specifier = ">=4.12.0" },
+    { name = "python-dotenv", specifier = ">=1.2.2" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "mypy", specifier = ">=2.1.0" }]
+dev = [
+    { name = "django-stubs", extras = ["compatible-mypy"], specifier = ">=5.1.0" },
+    { name = "mypy", specifier = ">=2.1.0" },
+]
 
 [[package]]
 name = "django-stubs"
-version = "6.0.4"
+version = "6.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -113,9 +119,14 @@ dependencies = [
     { name = "types-pyyaml" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f9/82/ccf2a2dc9cdb4bd9cbe91f11e887589bf2da7609506db00ccbc73bd8a6da/django_stubs-6.0.4.tar.gz", hash = "sha256:7aee77e8de9c14c0d9cf84988befe826d93cbc15a87e0ade2943f14d553451cf", size = 280019, upload-time = "2026-05-09T21:24:30.436Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/8a/8946216758eb66c5700a235e230af538d4ea474244c79452159b580425ba/django_stubs-6.0.5.tar.gz", hash = "sha256:7742b8e60afc68a8545158e2bdb103376d5a092f7902c17f370920a9c08eb957", size = 280490, upload-time = "2026-05-25T08:47:02.291Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/e7/5128914ada94dd6277626ef5a4a5680a4def7d2f9366214d26c1cd86723b/django_stubs-6.0.4-py3-none-any.whl", hash = "sha256:e991c68f77239663577a5f4fc75e99c84f867f378cafc97cbf4acc5aff378279", size = 543791, upload-time = "2026-05-09T21:24:28.218Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/09/64ff51a4cf4e8bdf8423d249b32eca0676e69233009ce9cd5478ba2c9635/django_stubs-6.0.5-py3-none-any.whl", hash = "sha256:9fb9eede9b2fc47b36c3dc4a93652eb959dff45466ec4a580e4a22782192d746", size = 544132, upload-time = "2026-05-25T08:47:00.332Z" },
+]
+
+[package.optional-dependencies]
+compatible-mypy = [
+    { name = "mypy" },
 ]
 
 [[package]]
@@ -295,6 +306,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/13/2b/db9a193df89e5660137f5428063bcc2ced7ad790003b26974adf5c5ceb3b/pytest_django-4.12.0.tar.gz", hash = "sha256:df94ec819a83c8979c8f6de13d9cdfbe76e8c21d39473cfe2b40c9fc9be3c758", size = 91156, upload-time = "2026-02-14T18:40:49.235Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/a5/41d091f697c09609e7ef1d5d61925494e0454ebf51de7de05f0f0a728f1d/pytest_django-4.12.0-py3-none-any.whl", hash = "sha256:3ff300c49f8350ba2953b90297d23bf5f589db69545f56f1ec5f8cff5da83e85", size = 26123, upload-time = "2026-02-14T18:40:47.381Z" },
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
 ]
 
 [[package]]
