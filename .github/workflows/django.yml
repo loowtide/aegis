@@ -29,7 +29,7 @@ jobs:
     - name: Mypy Type Checking
       env: 
        DJANGO_SETTINGS_MODULE: config.settings
-      run: uv run --group dev mypy .
+      run: uv run --group dev mypy . --show-traceback
 
     - name: Run Tests
       env:
