@@ -1,9 +1,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
-from django.test import Client
+from django.test import Client, override_settings, TestCase
 from django.utils import timezone
 
 from aegis.models import BlockedIP
@@ -15,9 +14,10 @@ from aegis.rate_limit import (
 )
 
 
-class TestRateLimit:
+@override_settings(AEGIS_RATE_LIMIT_REQUESTS=100)
+class TestRateLimit(TestCase):
     def test_under_limit_passes(self) -> None:
-        limited, count = is_rate_limited("127.0.0.1", 100, 60)
+        limited, count = is_rate_limited("127.0.0.14", 100, 60)
         assert not limited
         assert count == 1
 
@@ -65,8 +65,8 @@ class TestRateLimit:
             assert r == 2
 
 
-class TestAutoBlock:
-    @pytest.mark.django_db
+@override_settings(AEGIS_RATE_LIMIT_REQUESTS=100)
+class TestAutoBlock(TestCase):
     def test_under_limit_no_block(self) -> None:
         client = Client(REMOTE_ADDR="127.0.0.10")
         for _ in range(50):
@@ -74,7 +74,6 @@ class TestAutoBlock:
             assert resp.status_code in (200, 404)
         assert BlockedIP.objects.filter(ip="127.0.0.10").count() == 0
 
-    @pytest.mark.django_db
     def test_rate_limit_returns_429(self) -> None:
         ip = "127.0.0.11"
         client = Client(REMOTE_ADDR=ip)
@@ -85,14 +84,12 @@ class TestAutoBlock:
         assert resp.status_code == 429
         assert "Retry-After" in resp
 
-    @pytest.mark.django_db
     def test_skip_paths_bypass_rate_limit(self) -> None:
         client = Client(REMOTE_ADDR="127.0.0.12")
         with patch.object(settings, "AEGIS_RATE_LIMIT_SKIP_PATHS", ["/skip-me/"]):
             resp = client.get("/skip-me/")
             assert resp.status_code != 429
 
-    @pytest.mark.django_db
     def test_auto_block_creates_blockedip(self) -> None:
         ip = "127.0.0.13"
         window = 60
@@ -111,7 +108,6 @@ class TestAutoBlock:
         assert entry.expires_at is not None
         assert entry.expires_at > timezone.now()
 
-    @pytest.mark.django_db
     def test_existing_blocked_ips_get_403_via_middleware(self) -> None:
         ip = "127.0.0.14"
         BlockedIP.objects.create(
