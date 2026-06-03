@@ -22,8 +22,13 @@ jobs:
 
     - name: Set up Python 3.13
       run: uv python install 3.13
-
+   
+    - name: Install dependencies 
+      run: uv sync --group dev
+    
     - name: Mypy Type Checking
+      env: 
+       DJANGO_SETTINGS_MODULE: config.settings
       run: uv run --group dev mypy .
 
     - name: Run Tests
