@@ -1,0 +1,32 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        version: "latest"
+
+    - name: Set up Python 3.13
+      run: uv python install 3.13
+
+    - name: Mypy Type Checking
+      run: uv run --group dev mypy .
+
+    - name: Run Tests
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings
+      run: uv run pytest
