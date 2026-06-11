@@ -80,7 +80,7 @@ class RateLimitMiddleware:
         auto_block_enabled = getattr(settings, "AEGIS_RATE_LIMIT_AUTO_BLOCK", True)
         threshold = getattr(settings, "AEGIS_RATE_LIMIT_AUTO_BLOCK_THRESHOLD", 5)
         block_duration = getattr(settings, "AEGIS_RATE_LIMIT_BLOCK_DURATION", 3600)
-        limited, count = is_rate_limited(ip, max_requests, window)
+        limited, _ = is_rate_limited(ip, max_requests, window)
         if limited:
             violations = increment_violations(ip, window, threshold)
             if auto_block_enabled and violations >= threshold:
@@ -94,7 +94,6 @@ class RateLimitMiddleware:
             response = HttpResponse(html, status=429)
             response["Retry-After"] = str(retry_after)
             return response
-        # reset_if_clean_window(ip, window, threshold)
         return self.get_response(request)
 
     def _should_rate_limit(self, request: HttpRequest) -> bool:
