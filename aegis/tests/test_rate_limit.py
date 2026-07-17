@@ -1,18 +1,19 @@
-from django.core.cache import cache
 from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import Client, override_settings, TestCase
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
 from aegis.models import BlockedIP
 from aegis.rate_limit import (
+    _clean_streak_key,
+    _violation_key,
     _window_slot,
     increment_violations,
     is_rate_limited,
-    _violation_key,
-    _last_violation_window_key,
+    reset_if_clean_window,
 )
 
 
@@ -44,7 +45,7 @@ class TestRateLimit(TestCase):
             slot_b = _window_slot(60)
         assert slot_b > slot_a
 
-    def test_violations_accumalate_across_nonconsecutive_windows(self) -> None:
+    def test_violations_persist_without_clean_windows(self) -> None:
         ip = "127.0.0.99"
         window = 60
         threshold = 5
@@ -65,15 +66,6 @@ class TestRateLimit(TestCase):
             mock_slot.return_value = _window_slot(window)
             assert increment_violations(ip, window, threshold) == 1
             assert increment_violations(ip, window, threshold) == 1
-
-    def test_counter_clears_after_clean_period(self) -> None:
-        ip = "127.0.0.1"
-        window = 60
-        threshold = 5
-        assert increment_violations(ip, window, threshold) == 1
-        cache.delete(_violation_key(ip))
-        cache.delete(_last_violation_window_key(ip))
-        assert increment_violations(ip, window, threshold) == 1
 
 
 @override_settings(AEGIS_RATE_LIMIT_REQUESTS=100)
@@ -136,3 +128,67 @@ class TestAutoBlock(TestCase):
         client = Client(REMOTE_ADDR=ip)
         resp = client.get("/some-page")
         assert resp.status_code == 403
+
+
+class TestCleanWindowReset(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
+    def test_reset_after_n_consecutive_clean_windows(self) -> None:
+        ip = "127.0.0.50"
+        window = 60
+        threshold = 3
+        base = _window_slot(window)
+        with patch("aegis.rate_limit._window_slot") as mock_slot:
+            mock_slot.return_value = base
+            increment_violations(ip, window, threshold)
+            mock_slot.return_value = base + window
+            increment_violations(ip, window, threshold)
+            assert cache.get(_violation_key(ip)) == 2
+
+            mock_slot.return_value = base + 2 * window
+            reset_if_clean_window(ip, window, threshold)
+            mock_slot.return_value = base + 3 * window
+            reset_if_clean_window(ip, window, threshold)
+            mock_slot.return_value = base + 4 * window
+            result = reset_if_clean_window(ip, window, threshold)
+            assert result == 0
+            assert cache.get(_violation_key(ip)) in (0, None)
+
+    def test_violation_breaks_clean_streak(self) -> None:
+        ip = "127.0.0.51"
+        window = 60
+        threshold = 3
+        base = _window_slot(window)
+        with patch("aegis.rate_limit._window_slot") as mock_slot:
+            mock_slot.return_value = base
+            increment_violations(ip, window, threshold)
+            mock_slot.return_value = base + window
+            reset_if_clean_window(ip, window, threshold)
+            mock_slot.return_value = base + 2 * window
+            reset_if_clean_window(ip, window, threshold)
+            mock_slot.return_value = base + 3 * window
+            increment_violations(ip, window, threshold)
+            assert cache.get(_clean_streak_key(ip)) == 0
+
+    def test_no_op_on_ip_with_no_violation_history(self) -> None:
+        ip = "127.0.0.60"
+        window = 60
+        threshold = 3
+        result = reset_if_clean_window(ip, window, threshold)
+        assert result == 0
+        assert cache.get(_clean_streak_key(ip)) is None
+
+    def test_duplicate_clean_calls_same_window_are_noop(self) -> None:
+        ip = "127.0.0.61"
+        window = 60
+        threshold = 3
+        base = _window_slot(window)
+        with patch("aegis.rate_limit._window_slot") as mock_slot:
+            mock_slot.return_value = base
+            increment_violations(ip, window, threshold)
+            mock_slot.return_value = base + window
+            r1 = reset_if_clean_window(ip, window, threshold)
+            r2 = reset_if_clean_window(ip, window, threshold)
+            assert r1 == r2
+            assert cache.get(_clean_streak_key(ip)) == 1

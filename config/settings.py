@@ -1,6 +1,7 @@
-from pathlib import Path
-from dotenv import load_dotenv
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -100,9 +101,11 @@ STATIC_URL = "static/"
 Rate Limit Settings
 """
 AEGIS_RATE_LIMIT_ENABLED = True
-AEGIS_RATE_LIMIT_REQUESTS = 2
-AEGIS_RATE_LIMIT_WINDOW = 60
+AEGIS_RATE_LIMIT_REQUESTS = 10
+AEGIS_RATE_LIMIT_WINDOW = 20
 AEGIS_RATE_LIMIT_AUTO_BLOCK = True
-AEGIS_RATE_LIMIT_AUTO_BLOCK_THRESHOLD = 100
+AEGIS_RATE_LIMIT_AUTO_BLOCK_THRESHOLD = 2
 AEGIS_RATE_LIMIT_BLOCK_DURATION = 3600
 AEGIS_RATE_LIMIT_SKIP_PATHS = ["/admin/", "/static/"]
+AEGIS_TRUSTED_PROXY_NETWORKS = ["127.0.0.1"]
+AEGIS_TRUSTED_PROXY_DEPTH = 1

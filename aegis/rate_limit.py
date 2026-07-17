@@ -20,8 +20,12 @@ def _violation_key(ip: str) -> str:
     return f"aegis:{ip}:violations"
 
 
-def _last_violation_window_key(ip: str) -> str:
-    return f"aegis:{ip}:last_violated_window"
+def _clean_streak_key(ip: str) -> str:
+    return f"aegis:{ip}:clean_streak"
+
+
+def _last_seen_window_key(ip: str) -> str:
+    return f"aegis:{ip}:last_seen_window"
 
 
 def is_rate_limited(
@@ -46,7 +50,8 @@ def increment_violations(ip: str, window: int, threshold: int) -> int:
     key = _violation_key(ip)
     timeout = window * threshold * 2
     slot = _window_slot(window)
-    if cache.get(_last_violation_window_key(ip)) == slot:
+    last_key = _last_seen_window_key(key)
+    if cache.get(last_key) == slot:
         return get_violations(ip)
     if cache.add(key, 1, timeout=timeout):
         v = 1
@@ -57,23 +62,39 @@ def increment_violations(ip: str, window: int, threshold: int) -> int:
             cache.add(key, 1, timeout=timeout)
             v = 1
     cache.touch(key, timeout)
-    cache.set(_last_violation_window_key(ip), slot, timeout=timeout)
+    cache.set(_clean_streak_key(ip), 0, timeout=timeout)
+    cache.set(last_key, slot, timeout=timeout)
     return v
 
 
-"""
 def reset_if_clean_window(ip: str, window: int, threshold: int) -> int:
     key = _violation_key(ip)
-    last_slot = cache.get(_last_violation_window_key(ip))
-    if last_slot is None:
+    streak = _clean_streak_key(ip)
+    last_key = _last_seen_window_key(ip)
+    timeout = window * threshold * 2
+    slot = _window_slot(window)
+    if cache.get(last_key) == slot:
+        return get_violations(ip)
+
+    cache.set(last_key, slot, timeout=timeout)
+    if get_violations(ip) == 0:
         return 0
-    current_slot = _window_slot(window)
-    if current_slot > last_slot:
-        timeout = window * threshold * 2
+    if cache.add(streak, 1, timeout=timeout):
+        streak = 1
+    else:
+        try:
+            streak = cache.incr(streak)
+        except ValueError:
+            cache.add(streak, 1, timeout=timeout)
+            streak = 1
+    cache.touch(streak, timeout)
+
+    if streak >= threshold:
         cache.set(key, 0, timeout=timeout)
+        cache.set(streak, 0, timeout=timeout)
         return 0
-    return cache.get(key) or 0
-"""
+
+    return get_violations(ip)
 
 
 def auto_block(ip: str, duration: int) -> BlockedIP:

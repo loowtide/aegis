@@ -11,6 +11,7 @@ from aegis.rate_limit import (
     auto_block,
     increment_violations,
     is_rate_limited,
+    reset_if_clean_window,
     #    reset_if_clean_window,
 )
 from aegis.utils import get_client_ip
@@ -94,6 +95,8 @@ class RateLimitMiddleware:
             response = HttpResponse(html, status=429)
             response["Retry-After"] = str(retry_after)
             return response
+        else:
+            reset_if_clean_window(ip, window, threshold)
         return self.get_response(request)
 
     def _should_rate_limit(self, request: HttpRequest) -> bool:
