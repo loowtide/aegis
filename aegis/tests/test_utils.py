@@ -61,7 +61,7 @@ class TestGetClientIpSpoofing:
         )
         assert get_client_ip(request) == "198.51.100.7"
 
-    def test_depth_two_requires_two_hops(self, monkeypatch) -> None:
+    def test_depth_two_requires_two_hops(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from aegis import utils
 
         monkeypatch.setattr(utils, "TRUSTED_PROXY_DEPTH", 2)

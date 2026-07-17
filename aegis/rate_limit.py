@@ -50,7 +50,7 @@ def increment_violations(ip: str, window: int, threshold: int) -> int:
     key = _violation_key(ip)
     timeout = window * threshold * 2
     slot = _window_slot(window)
-    last_key = _last_seen_window_key(key)
+    last_key = _last_seen_window_key(ip)
     if cache.get(last_key) == slot:
         return get_violations(ip)
     if cache.add(key, 1, timeout=timeout):
@@ -80,16 +80,16 @@ def reset_if_clean_window(ip: str, window: int, threshold: int) -> int:
     if get_violations(ip) == 0:
         return 0
     if cache.add(streak, 1, timeout=timeout):
-        streak = 1
+        streak_cnt = 1
     else:
         try:
-            streak = cache.incr(streak)
+            streak_cnt = cache.incr(streak)
         except ValueError:
             cache.add(streak, 1, timeout=timeout)
-            streak = 1
+            streak_cnt = 1
     cache.touch(streak, timeout)
 
-    if streak >= threshold:
+    if streak_cnt >= threshold:
         cache.set(key, 0, timeout=timeout)
         cache.set(streak, 0, timeout=timeout)
         return 0
@@ -97,14 +97,14 @@ def reset_if_clean_window(ip: str, window: int, threshold: int) -> int:
     return get_violations(ip)
 
 
-def auto_block(ip: str, duration: int) -> BlockedIP:
+def auto_block(ip: str, duration: int, extend_active: bool = False) -> BlockedIP:
     reason = "Rate limit violation threshold exceeded"
     expires_at = timezone.now() + timedelta(seconds=duration)
     blocked, _ = BlockedIP.objects.get_or_create(
         ip=ip,
         defaults={"reason": reason, "expires_at": expires_at},
     )
-    if not blocked.expires_at or blocked.expires_at < timezone.now():
+    if not blocked.expires_at or blocked.expires_at < timezone.now() or extend_active:
         blocked.expires_at = expires_at
         blocked.reason = reason
         blocked.save(update_fields=["expires_at", "reason"])

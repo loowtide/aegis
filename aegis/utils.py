@@ -13,7 +13,7 @@ from aegis.models import BlockedIP
 logger = logging.getLogger(__name__)
 
 
-def _load_trusted_networks() -> list[ipaddress.IPv4Network]:
+def _load_trusted_networks() -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
     raw = getattr(settings, "AEGIS_TRUSTED_PROXY_NETWORKS", ["127.0.0.1"])
     networks = []
     for entry in raw:
