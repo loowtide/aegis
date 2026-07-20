@@ -80,8 +80,8 @@ wheels = [
 
 [[package]]
 name = "django-aegis"
-version = "0.1.0"
-source = { virtual = "." }
+version = "0.0.1"
+source = { editable = "." }
 dependencies = [
     { name = "django" },
     { name = "django-stubs" },
