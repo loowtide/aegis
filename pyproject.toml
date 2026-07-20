@@ -1,8 +1,15 @@
+[build-system]
+requires = ["uv_build>=0.9.21,<=0.12.0"]
+build-backend = "uv_build"
+
 [project]
 name = "django-aegis"
-version = "0.1.0"
+version = "0.0.1"
 description = "IP based blocker with rate limiting"
 readme = "README.md"
+authors = [{ name = "loowtide" }]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 requires-python = ">=3.13"
 dependencies = [
   "django>=6.0.5",
@@ -10,6 +17,24 @@ dependencies = [
   "pytest-django>=4.12.0",
   "python-dotenv>=1.2.2",
 ]
+keywords = ["aegis", "blocker", "ip", "rate limiting", "api"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/loowtide/aegis"
+
+[tool.uv.build-backend]
+module-name = "aegis"
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
