@@ -2,9 +2,9 @@ name: Django CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -12,29 +12,29 @@ jobs:
     env:
       DJANGO_SETTINGS_MODULE: config.settings
       DJANGO_SECRET_KEY: ci-secret-key
-      
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v7
 
-    - name: Set up uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        enable-cache: true
-        version: "latest"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        with:
+          enable-cache: true
+          version: "latest"
 
-    - name: Set up Python 3.13
-      run: uv python install 3.13
-   
-    - name: Install dependencies 
-      run: uv sync --group dev
-    
-    - name: Mypy Type Checking
-      env: 
-       DJANGO_SETTINGS_MODULE: config.settings
-      run: uv run --group dev mypy . --show-traceback
+      - name: Set up Python 3.13
+        run: uv python install 3.13
 
-    - name: Run Tests
-      env:
-        DJANGO_SETTINGS_MODULE: config.settings
-      run: uv run pytest
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Mypy Type Checking
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+        run: uv run --group dev mypy . --show-traceback
+
+      - name: Run Tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+        run: uv run pytest
